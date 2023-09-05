@@ -14,7 +14,7 @@ exports.serverCreate = async (req, res) => {
       return res.json({ error: true, msg: `มีเซิฟเวอร์ในระบบแล้ว` });
 
     let dataCreate = {
-      type: "remote",
+      type: "convert",
       svIp: ipV4,
       svName: hostname,
       isWork: false,
