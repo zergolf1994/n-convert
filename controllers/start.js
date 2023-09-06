@@ -48,11 +48,11 @@ exports.ProcessStart = async (req, res) => {
         { isWork: true }
       );
       // คำสั่ง เพื่อดำเนินการ ส่งต่อไปยัง bash
-      /*shell.exec(
+      shell.exec(
         `sudo bash ${global.dir}/shell/download.sh ${fileId}`,
         { async: false, silent: false },
         function (data) {}
-      );*/
+      );
 
       return res.json({
         msg: "สร้างสำเร็จ",
@@ -69,8 +69,9 @@ exports.ProcessStart = async (req, res) => {
 exports.DataDownload = async (req, res) => {
   try {
     const { fileId } = req.query;
-    const rows = await File.Process.aggregate([
+    const rows = await File.Data.aggregate([
       { $match: { fileId } },
+      //file
       {
         $lookup: {
           from: "files",
@@ -80,10 +81,7 @@ exports.DataDownload = async (req, res) => {
           pipeline: [
             {
               $project: {
-                _id: 1,
-                type: 1,
-                title: 1,
-                source: 1,
+                _id: 0,
                 slug: 1,
               },
             },
@@ -95,24 +93,51 @@ exports.DataDownload = async (req, res) => {
           file: { $arrayElemAt: ["$files", 0] },
         },
       },
+      //server
+      {
+        $lookup: {
+          from: "servers",
+          localField: "serverId",
+          foreignField: "_id",
+          as: "servers",
+          pipeline: [
+            {
+              $project: {
+                _id: 0,
+                svIp: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $addFields: {
+          server: { $arrayElemAt: ["$servers", 0] },
+        },
+      },
       {
         $set: {
           slug: "$file.slug",
-          title: "$file.title",
-          type: "$file.type",
-          source: "$file.source",
+          source: {
+            $concat: [
+              "http://",
+              "$server.svIp",
+              ":8889/mp4/",
+              "$file.slug",
+              "/file_",
+              "$$ROOT.name",
+              ".mp4",
+            ],
+          },
         },
       },
       {
         $project: {
-          quality: 1,
           fileId: 1,
-          userId: 1,
-          serverId: 1,
           slug: 1,
-          title: 1,
-          type: 1,
           source: 1,
+          //contentIndex: 0,
+          //contentMaster: 0,
         },
       },
     ]);
@@ -133,5 +158,43 @@ exports.DataDownload = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.json({ error: true, msg: "DataRemote" });
+  }
+};
+
+exports.ConvertDone = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const file = await File.List.findOne({ slug }).select(`_id slug userId`);
+    if (!file?._id) return res.json({ error: true, msg: "No data_file." });
+
+    const totalVideo = await File.Data.countDocuments({
+      fileId: file?._id,
+      type: "video",
+      name: ["360", "480", "720", "1080"],
+    });
+    if (!totalVideo) return res.json({ error: true, msg: "No totalVideo." });
+
+    const file_process = await File.Process.findOne({
+      fileId: file?._id,
+      type: "convert",
+    });
+
+    await Server.List.findByIdAndUpdate(
+      { _id: file_process?.serverId },
+      { isWork: false }
+    );
+    await File.Process.deleteOne({ _id: file_process?._id });
+
+    shell.exec(
+      `sudo rm -rf ${global.dirPublic}${file?.slug}`,
+      { async: false, silent: false },
+      function (data) {}
+    );
+
+    return res.json({ msg: "converted" });
+  } catch (err) {
+    console.log(err);
+    return res.json({ error: true, msg: "ConvertDone" });
   }
 };

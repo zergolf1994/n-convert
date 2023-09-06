@@ -84,3 +84,76 @@ exports.ConvertDefault = async ({ row }) => {
     return { error: true };
   }
 };
+
+exports.ConvertQuality = async ({ slug, quality }) => {
+  try {
+    const videoInput = path.join(global.dirPublic, slug, `file_default.mp4`),
+      folderPath = path.join(global.dirPublic, slug);
+
+    if (!fs.existsSync(videoInput)) {
+      return { error: true, msg: "No video." };
+    }
+    let { streams } = await this.GetData(videoInput);
+
+    const videoStream = streams.find((stream) => stream.codec_type === "video");
+    if (!videoStream) {
+      return res.json({ error: true, msg: "ไม่พบสตรีมวิดีโอในไฟล์" });
+    }
+
+    let { width, height, codec_name } = videoStream;
+
+    return new Promise((resolve, reject) => {
+      let setup = ffmpeg(videoInput);
+      setup.output(path.join(folderPath, `file_${quality}.mp4`));
+      setup.outputOptions([
+        "-c:v libx264", // เลือกใช้ H.264 ในการเข้ารหัสวิดีโอ
+        "-crf 23", // ควบคุมคุณภาพวิดีโอ (ค่าประมาณ 17-23 เป็นไปตามความต้องการ)
+        "-preset medium", // ตั้งค่า preset เป็น medium เพื่อสมดุลคุณภาพและเวลาทำการแปลง
+        "-profile:v high", // ใช้โปรไฟล์ H.264 High Profile
+        "-level:v 4.2", // ใช้ระดับ H.264 Level 4.2
+        "-movflags +faststart", // เปิดใช้งาน Fast Start เพื่อให้เปิดเล่นได้ก่อนที่ไฟล์จะถูกดาวน์โหลดเสร็จสิ้น
+      ]);
+      if (width > height) {
+        setup.size(`?x${quality}`);
+      } else {
+        setup.size(`${quality}x?`);
+      }
+
+      setup.on("start", () => {
+        console.log(`${slug} | convert | ${quality}`);
+      });
+      setup.on("progress", async (d) => {
+        let percent = Math.floor(d?.percent);
+        fs.writeFileSync(
+          path.join(folderPath, `convert_${quality}.txt`),
+          JSON.stringify({ percent: percent || 0 }),
+          "utf8"
+        );
+      });
+      setup.on("end", async () => {
+        fs.writeFileSync(
+          path.join(folderPath, `convert_${quality}.txt`),
+          JSON.stringify({ percent: 100 }),
+          "utf8"
+        );
+        resolve({
+          msg: "converted",
+          output: path.join(folderPath, `file_${quality}.mp4`),
+        });
+      });
+      setup.on("error", async (err, stdout, stderr) => {
+        fs.writeFileSync(
+          path.join(folderPath, `convert_${quality}.txt`),
+          JSON.stringify({ percent: 100 }),
+          "utf8"
+        );
+        console.log(`error video-convert`, err);
+        resolve({ error: true, err });
+      });
+      setup.run();
+    });
+  } catch (error) {
+    //console.error(error);
+    return { error: true };
+  }
+};

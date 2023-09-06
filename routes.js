@@ -2,17 +2,28 @@
 const express = require("express");
 const router = express.Router();
 
-const { ProcessStart, DataDownload } = require("./controllers/start");
+const {
+  ProcessStart,
+  DataDownload,
+  ConvertDone,
+} = require("./controllers/start");
 
 router.get("/start", ProcessStart);
 
 router.get("/data", DataDownload);
+router.get("/done/:slug", ConvertDone);
 
-const { UploadToStorage, ConvertToMp4 } = require("./controllers/remote");
+const { UploadToStorage } = require("./controllers/remote");
 
-router.get("/convert", ConvertToMp4);
+const { DataConvert, ConvertResolution } = require("./controllers/convert");
+router.get("/convert/data/:slug", DataConvert);
+router.get("/convert/:slug/:quality", ConvertResolution);
 
-router.get("/remote", UploadToStorage);
+router.get("/remote/:slug/:quality", UploadToStorage);
+
+const { DataThumbnail, UploadThumbnail } = require("./controllers/thumbnail");
+router.get("/thumbnail/data/:slug", DataThumbnail);
+router.get("/thumbnail/remote/:slug", UploadThumbnail);
 
 const { DataVideo, DownloadPercent } = require("./controllers/data");
 router.get("/video/:fileId/:fileName", DataVideo);

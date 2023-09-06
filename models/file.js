@@ -37,6 +37,7 @@ const Data = mongoose.model(
       type: { type: String },
       name: { type: String },
       size: { type: Mixed },
+      dimention: { type: String },
       serverId: { type: String },
       userId: { type: String, required: true },
       fileId: { type: String, required: true },
