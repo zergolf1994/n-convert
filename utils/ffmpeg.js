@@ -102,6 +102,13 @@ exports.ConvertQuality = async ({ slug, quality }) => {
 
     let { width, height, codec_name } = videoStream;
 
+    let resol = {
+      1080: 1920,
+      720: 1280,
+      480: 854,
+      360: 640,
+      240: 426,
+    };
     return new Promise((resolve, reject) => {
       let setup = ffmpeg(videoInput);
       setup.output(path.join(folderPath, `file_${quality}.mp4`));
@@ -114,9 +121,9 @@ exports.ConvertQuality = async ({ slug, quality }) => {
         "-movflags +faststart", // เปิดใช้งาน Fast Start เพื่อให้เปิดเล่นได้ก่อนที่ไฟล์จะถูกดาวน์โหลดเสร็จสิ้น
       ]);
       if (width > height) {
-        setup.size(`${quality}x?`);
+        setup.size(`${resol[quality]}x?`);
       } else {
-        setup.size(`?x${quality}`);
+        setup.size(`?x${resol[quality]}`);
       }
 
       setup.on("start", () => {

@@ -44,13 +44,13 @@ exports.DataConvert = async (req, res) => {
       else if (height >= 640) data.maxResolution = 360;
       else if (height >= 426) data.maxResolution = 240;
     }
-
+    
     let resolutions = {
-      1080: [640, 854, 1280, 1920],
-      720: [640, 854, 1280],
-      480: [640, 854],
-      360: [640],
-      240: [426],
+      1080: [360, 480, 720, 1080],
+      720: [360, 480, 720],
+      480: [360, 480],
+      360: [360],
+      240: [240],
     };
 
     data.resolutions = resolutions[data.maxResolution];
