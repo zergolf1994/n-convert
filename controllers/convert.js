@@ -32,22 +32,25 @@ exports.DataConvert = async (req, res) => {
     };
 
     if (data.video_type == "horizontal") {
-      if (height >= 1080) data.maxResolution = 1080;
-      else if (height >= 720) data.maxResolution = 720;
-      else if (height >= 480) data.maxResolution = 480;
-      else if (height >= 360) data.maxResolution = 360;
+      if (width >= 1920) data.maxResolution = 1080;
+      else if (width >= 1280) data.maxResolution = 720;
+      else if (width >= 854) data.maxResolution = 480;
+      else if (width >= 640) data.maxResolution = 360;
+      else if (width >= 426) data.maxResolution = 240;
     } else {
-      if (width >= 1080) data.maxResolution = 1080;
-      else if (width >= 720) data.maxResolution = 720;
-      else if (width >= 480) data.maxResolution = 480;
-      else if (width >= 360) data.maxResolution = 360;
+      if (height >= 1920) data.maxResolution = 1080;
+      else if (height >= 1280) data.maxResolution = 720;
+      else if (height >= 854) data.maxResolution = 480;
+      else if (height >= 640) data.maxResolution = 360;
+      else if (height >= 426) data.maxResolution = 240;
     }
 
     let resolutions = {
-      1080: [360, 480, 720, 1080],
-      720: [360, 480, 720],
-      480: [360, 480],
-      360: [360],
+      1080: [640, 854, 1280, 1920],
+      720: [640, 854, 1280],
+      480: [640, 854],
+      360: [640],
+      240: [426],
     };
 
     data.resolutions = resolutions[data.maxResolution];

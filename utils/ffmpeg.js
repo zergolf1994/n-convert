@@ -114,9 +114,9 @@ exports.ConvertQuality = async ({ slug, quality }) => {
         "-movflags +faststart", // เปิดใช้งาน Fast Start เพื่อให้เปิดเล่นได้ก่อนที่ไฟล์จะถูกดาวน์โหลดเสร็จสิ้น
       ]);
       if (width > height) {
-        setup.size(`?x${quality}`);
-      } else {
         setup.size(`${quality}x?`);
+      } else {
+        setup.size(`?x${quality}`);
       }
 
       setup.on("start", () => {
