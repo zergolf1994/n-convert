@@ -29,22 +29,55 @@ exports.DataConvert = async (req, res) => {
       height,
       codec_name,
       video_type: width > height ? "horizontal" : "vertical",
+      useType: "height",
     };
 
     if (data.video_type == "horizontal") {
-      if (width >= 1920) data.maxResolution = 1080;
-      else if (width >= 1280) data.maxResolution = 720;
-      else if (width >= 854) data.maxResolution = 480;
-      else if (width >= 640) data.maxResolution = 360;
-      else if (width >= 426) data.maxResolution = 240;
+      if (width >= 1920 || height >= 1080) {
+        data.maxResolution = 1080;
+        if (width >= 1920) {
+          data.useType = "width";
+        }
+      } else if (width >= 1280 || height >= 720) {
+        data.maxResolution = 720;
+        if (width >= 1280) {
+          data.useType = "width";
+        }
+      } else if (width >= 854 || height >= 480) {
+        data.maxResolution = 480;
+        if (width >= 854) {
+          data.useType = "width";
+        }
+      } else {
+        data.maxResolution = 360;
+        if (width >= 640) {
+          data.useType = "width";
+        }
+      }
     } else {
-      if (height >= 1920) data.maxResolution = 1080;
-      else if (height >= 1280) data.maxResolution = 720;
-      else if (height >= 854) data.maxResolution = 480;
-      else if (height >= 640) data.maxResolution = 360;
-      else if (height >= 426) data.maxResolution = 240;
+      if (width >= 1080 || height >= 1920) {
+        data.maxResolution = 1080;
+        if (width >= 1080) {
+          data.useType = "width";
+        }
+      } else if (width >= 720 || height >= 1280) {
+        data.maxResolution = 720;
+        if (width >= 720) {
+          data.useType = "width";
+        }
+      } else if (width >= 480 || height >= 854) {
+        data.maxResolution = 480;
+        if (width >= 480) {
+          data.useType = "width";
+        }
+      } else {
+        data.maxResolution = 360;
+        if (width >= 360) {
+          data.useType = "width";
+        }
+      }
     }
-    
+
     let resolutions = {
       1080: [360, 480, 720, 1080],
       720: [360, 480, 720],
@@ -63,14 +96,14 @@ exports.DataConvert = async (req, res) => {
 
 exports.ConvertResolution = async (req, res) => {
   try {
-    const { slug , quality } = req.params;
+    const { slug, quality } = req.params;
 
     const videoInput = path.join(global.dirPublic, slug, `file_default.mp4`);
 
     if (!fs.existsSync(videoInput)) {
       return res.json({ error: true, msg: "No video." });
     }
-    const data = await ConvertQuality({ slug , quality })
+    const data = await ConvertQuality({ slug, quality });
     return res.json(data);
   } catch (err) {
     console.log(err);

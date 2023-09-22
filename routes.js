@@ -21,10 +21,6 @@ router.get("/convert/:slug/:quality", ConvertResolution);
 
 router.get("/remote/:slug/:quality", UploadToStorage);
 
-const { DataThumbnail, UploadThumbnail } = require("./controllers/thumbnail");
-router.get("/thumbnail/data/:slug", DataThumbnail);
-router.get("/thumbnail/remote/:slug", UploadThumbnail);
-
 const { DataVideo, DownloadPercent } = require("./controllers/data");
 router.get("/video/:fileId/:fileName", DataVideo);
 

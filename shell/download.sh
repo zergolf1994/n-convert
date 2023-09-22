@@ -32,12 +32,9 @@ if [[ $source != "null" ]]; then
     echo "${slug} | Downloaded"
 fi
 
-sleep 5
-sudo bash ${root_dir}/shell/convert.sh ${slug} 
-
-sleep 5
-sudo bash ${root_dir}/shell/thumbnail.sh ${slug} 
-sleep 5
-curl -sS "http://${localhost}/done/${slug}"
+#sleep 5
+#sudo bash ${root_dir}/shell/convert.sh ${slug} 
+#sleep 5
+#curl -sS "http://${localhost}/done/${slug}"
 
 exit 1
