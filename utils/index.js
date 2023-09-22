@@ -12,6 +12,7 @@ const getOs = require("./getOs");
 const Ffmpeg = require("./ffmpeg");
 const Scp = require("./scp");
 const useCurl = require("./useCurl");
+const Cacher = require("./cache");
 
 module.exports = {
   AuthJWT,
@@ -26,4 +27,5 @@ module.exports = {
   Ffmpeg,
   Scp,
   useCurl,
+  Cacher,
 };

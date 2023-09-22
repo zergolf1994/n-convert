@@ -17,8 +17,8 @@ const { UploadToStorage } = require("./controllers/remote");
 
 const { DataConvert, ConvertResolution } = require("./controllers/convert");
 router.get("/convert/data/:slug", DataConvert);
-router.get("/convert/:slug/:quality", ConvertResolution);
-
+//router.get("/convert/:slug/:quality", ConvertResolution);
+router.post("/convert", ConvertResolution);
 router.get("/remote/:slug/:quality", UploadToStorage);
 
 const { DataVideo, DownloadPercent } = require("./controllers/data");

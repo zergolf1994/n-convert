@@ -20,7 +20,7 @@ quality=$(echo $data | jq -r ".quality")
 outPutPath=$(echo $data | jq ".outPutPath"  --raw-output)
 root_dir=$(echo $data | jq -r ".root_dir")
 
-#sudo bash ${root_dir}/shell/updatePercent.sh ${slug} > /dev/null &
+sudo bash ${root_dir}/shell/updatePercent.sh ${slug} > /dev/null &
 
 if [[ $source != "null" ]]; then
 
@@ -33,8 +33,8 @@ if [[ $source != "null" ]]; then
 fi
 
 #sleep 5
-#sudo bash ${root_dir}/shell/convert.sh ${slug} 
+sudo bash ${root_dir}/shell/convert.sh ${slug} 
 #sleep 5
-#curl -sS "http://${localhost}/done/${slug}"
+curl -sS "http://${localhost}/done/${slug}"
 
 exit 1

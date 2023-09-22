@@ -1,12 +1,80 @@
 const fs = require("fs-extra");
 const path = require("path");
-const { Ffmpeg } = require("../utils");
+const { Ffmpeg, Cacher } = require("../utils");
 const { ConvertQuality } = require("../utils/ffmpeg");
+const { File } = require("../models");
 
 exports.DataConvert = async (req, res) => {
   try {
     const { slug } = req.params;
 
+    const rows = await File.List.aggregate([
+      { $match: { slug } },
+      //file_data
+      {
+        $lookup: {
+          from: "file_datas",
+          localField: "_id",
+          foreignField: "fileId",
+          as: "datas",
+          pipeline: [
+            { $match: { type: "video" } },
+            {
+              $project: {
+                _id: 0,
+                name: 1,
+              },
+            },
+          ],
+        },
+      },
+      //users
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "users",
+          pipeline: [
+            {
+              $project: {
+                _id: 0,
+                max1080p: 1,
+                max720p: 1,
+                max480p: 1,
+                max360p: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $addFields: {
+          user: { $arrayElemAt: ["$users", 0] },
+        },
+      },
+      {
+        $addFields: {
+          video: {
+            $map: {
+              input: "$datas",
+              as: "data",
+              in: "$$data.name",
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          video: 1,
+          user: 1,
+        },
+      },
+    ]);
+
+    if (!rows?.length) return res.json({ error: true, msg: "No Data" });
+    const row = rows?.at(0);
     const videoInput = path.join(global.dirPublic, slug, `file_default.mp4`);
 
     if (!fs.existsSync(videoInput)) {
@@ -77,16 +145,27 @@ exports.DataConvert = async (req, res) => {
         }
       }
     }
-
     let resolutions = {
-      1080: [360, 480, 720, 1080],
-      720: [360, 480, 720],
-      480: [360, 480],
-      360: [360],
-      240: [240],
+      1080: row?.user?.max1080p || [360, 480, 720, 1080],
+      720: row?.user?.max720p || [360, 480, 720],
+      480: row?.user?.max480p || [360, 480],
+      360: row?.user?.max360p || [360],
     };
+    let testRes = row?.video;
+    let Array1 = resolutions[data.maxResolution].map(String);
 
-    data.resolutions = resolutions[data.maxResolution];
+    for (let i = 0; i < Array1.length; i++) {
+      const indexInArray2 = testRes.indexOf(Array1[i]);
+      if (indexInArray2 != -1) {
+        Array1.splice(i, 1);
+        i--; // ลดค่า i ลงเพื่อปรับค่า index ที่ถูกลบ
+      }
+    }
+    Array1.sort();
+    data.resolutions = Array1;
+
+    await Cacher.saveData(slug, data);
+
     return res.json(data);
   } catch (err) {
     console.log(err);
@@ -96,14 +175,13 @@ exports.DataConvert = async (req, res) => {
 
 exports.ConvertResolution = async (req, res) => {
   try {
-    const { slug, quality } = req.params;
-
+    const { slug, quality, useType } = req.body;
     const videoInput = path.join(global.dirPublic, slug, `file_default.mp4`);
 
     if (!fs.existsSync(videoInput)) {
       return res.json({ error: true, msg: "No video." });
     }
-    const data = await ConvertQuality({ slug, quality });
+    const data = await ConvertQuality({ slug, quality, useType });
     return res.json(data);
   } catch (err) {
     console.log(err);

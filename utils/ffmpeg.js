@@ -85,7 +85,7 @@ exports.ConvertDefault = async ({ row }) => {
   }
 };
 
-exports.ConvertQuality = async ({ slug, quality }) => {
+exports.ConvertQuality = async ({ slug, quality, useType }) => {
   try {
     const videoInput = path.join(global.dirPublic, slug, `file_default.mp4`),
       folderPath = path.join(global.dirPublic, slug);
@@ -99,16 +99,24 @@ exports.ConvertQuality = async ({ slug, quality }) => {
     if (!videoStream) {
       return res.json({ error: true, msg: "ไม่พบสตรีมวิดีโอในไฟล์" });
     }
-
+    /*
     let { width, height, codec_name } = videoStream;
 
-    let resol = {
+    let resolWidth = {
       1080: 1920,
       720: 1280,
       480: 854,
       360: 640,
       240: 426,
     };
+    */
+    let setSize = ``;
+    if (useType == "height") {
+      setSize = `?x${quality}`;
+    } else {
+      setSize = `${quality}x?`;
+    }
+    console.log(setSize);
     return new Promise((resolve, reject) => {
       let setup = ffmpeg(videoInput);
       setup.output(path.join(folderPath, `file_${quality}.mp4`));
@@ -120,11 +128,7 @@ exports.ConvertQuality = async ({ slug, quality }) => {
         "-level:v 4.2", // ใช้ระดับ H.264 Level 4.2
         "-movflags +faststart", // เปิดใช้งาน Fast Start เพื่อให้เปิดเล่นได้ก่อนที่ไฟล์จะถูกดาวน์โหลดเสร็จสิ้น
       ]);
-      if (width > height) {
-        setup.size(`${resol[quality]}x?`);
-      } else {
-        setup.size(`?x${resol[quality]}`);
-      }
+      setup.size(setSize);
 
       setup.on("start", () => {
         console.log(`${slug} | convert | ${quality}`);
@@ -160,7 +164,7 @@ exports.ConvertQuality = async ({ slug, quality }) => {
       setup.run();
     });
   } catch (error) {
-    //console.error(error);
+    console.error(error);
     return { error: true };
   }
 };

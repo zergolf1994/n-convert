@@ -19,11 +19,14 @@ if [[ $error == true ]]; then
 fi
 #เรียกดูความละเอียดทั้งหมด
 resolutions=$(echo $data | jq -r ".resolutions[]")
+useType=$(echo $data | jq -r ".useType")
 #วนลูป เพื่อ ประมวลผลไฟล์ + อัพโหลดขึ้น Storage
 for resolution in $resolutions; do
     echo "${slug} | convert | $resolution"
-    curl -sS "http://${localhost}/convert/${slug}/${resolution}"
-    sleep 2
+
+    post_url="http://${localhost}/convert/"
+    json_data="{\"slug\": \"${slug}\", \"quality\": \"${resolution}\", \"useType\": \"${useType}\"}"
+    curl -X POST -H "Content-Type: application/json" -d "$json_data" "$post_url"
     curl -sS "http://${localhost}/remote/${slug}/${resolution}"
     sleep 2
 done
