@@ -128,3 +128,47 @@ exports.StorageImage = async ({ row, storage, input, output }) => {
     return res.json({ error: true });
   }
 };
+exports.Download = async ({ saveTo, downloadFrom, storage }) => {
+  try {
+    let sshConfig = {
+      host: storage?.svIp,
+      port: storage?.svPort,
+      username: storage?.svUser,
+      password: storage?.svPass,
+    };
+   // console.log("saveTo", saveTo);
+   // console.log("downloadFrom", downloadFrom);
+    //console.log("storage", storage);
+
+    if (fs.existsSync(saveTo)) {
+      fs.unlinkSync(saveTo);
+    }
+
+    return new Promise(async function (resolve, reject) {
+      Client(sshConfig)
+        .then(async (client) => {
+          await client
+            .downloadFile(downloadFrom, saveTo)
+            .then(async (response) => {
+              client.close();
+              resolve({ msg: "downloaded" });
+            })
+            .catch((error) => {
+              console.log(error);
+              client.close();
+              resolve({ error: true, msg: "download_failed" });
+            });
+          client.close();
+          resolve({ msg: "done" });
+        })
+        .catch((e) => {
+          //console.log("e", e);
+          client.close();
+          resolve({ error: true, msg: "connect" });
+        });
+    });
+  } catch (err) {
+    console.log(err);
+    return res.json({ error: true });
+  }
+};

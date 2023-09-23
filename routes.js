@@ -6,11 +6,15 @@ const {
   ProcessStart,
   DataDownload,
   ConvertDone,
+  DownloadVideo,
+  ConvertStart,
 } = require("./controllers/start");
 
 router.get("/start", ProcessStart);
+router.get("/convert-start", ConvertStart);
 
 router.get("/data", DataDownload);
+router.get("/download", DownloadVideo);
 router.get("/done/:slug", ConvertDone);
 
 const { UploadToStorage } = require("./controllers/remote");

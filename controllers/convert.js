@@ -66,7 +66,7 @@ exports.DataConvert = async (req, res) => {
       },
       {
         $project: {
-          _id: 0,
+          _id: 1,
           video: 1,
           user: 1,
         },
@@ -93,6 +93,7 @@ exports.DataConvert = async (req, res) => {
       return res.json({ error: true, msg: "ขนาดวิดีโอไม่ถูกต้อง" });
 
     let data = {
+      fileId: row?._id,
       width,
       height,
       codec_name,
@@ -145,11 +146,14 @@ exports.DataConvert = async (req, res) => {
         }
       }
     }
+
+    let { max1080p, max720p, max480p, max360p } = row?.user;
+
     let resolutions = {
-      1080: row?.user?.max1080p || [360, 480, 720, 1080],
-      720: row?.user?.max720p || [360, 480, 720],
-      480: row?.user?.max480p || [360, 480],
-      360: row?.user?.max360p || [360],
+      1080: max1080p?.length ? max1080p : [360, 480, 720, 1080],
+      720: max720p?.length ? max720p : [360, 480, 720],
+      480: max480p?.length ? max480p : [360, 480],
+      360: max360p?.length ? max360p : [360],
     };
     let testRes = row?.video;
     let Array1 = resolutions[data.maxResolution].map(String);
@@ -176,6 +180,7 @@ exports.DataConvert = async (req, res) => {
 exports.ConvertResolution = async (req, res) => {
   try {
     const { slug, quality, useType } = req.body;
+
     const videoInput = path.join(global.dirPublic, slug, `file_default.mp4`);
 
     if (!fs.existsSync(videoInput)) {

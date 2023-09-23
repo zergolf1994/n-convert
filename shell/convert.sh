@@ -9,7 +9,7 @@ slug=${1}
 echo "${slug} | convert"
 
 data=$(curl -sLf "http://${localhost}/convert/data/${slug}" | jq -r ".")
-
+echo $data
 error=$(echo $data | jq -r ".error")
 
 if [[ $error == true ]]; then
@@ -20,13 +20,20 @@ fi
 #เรียกดูความละเอียดทั้งหมด
 resolutions=$(echo $data | jq -r ".resolutions[]")
 useType=$(echo $data | jq -r ".useType")
+
+sudo bash ${root_dir}/shell/updatePercent.sh ${slug} > /dev/null &
 #วนลูป เพื่อ ประมวลผลไฟล์ + อัพโหลดขึ้น Storage
 for resolution in $resolutions; do
     echo "${slug} | convert | $resolution"
-
+    
     post_url="http://${localhost}/convert/"
     json_data="{\"slug\": \"${slug}\", \"quality\": \"${resolution}\", \"useType\": \"${useType}\"}"
     curl -X POST -H "Content-Type: application/json" -d "$json_data" "$post_url"
+
     curl -sS "http://${localhost}/remote/${slug}/${resolution}"
     sleep 2
 done
+sleep 5
+curl -sS "http://${localhost}/done/${slug}"
+
+exit 1

@@ -198,3 +198,128 @@ exports.ConvertDone = async (req, res) => {
     return res.json({ error: true, msg: "ConvertDone" });
   }
 };
+exports.DownloadVideo = async (req, res) => {
+  try {
+    const { fileId } = req.query;
+    const rows = await File.Data.aggregate([
+      { $match: { fileId } },
+      //file
+      {
+        $lookup: {
+          from: "files",
+          localField: "fileId",
+          foreignField: "_id",
+          as: "files",
+          pipeline: [
+            {
+              $project: {
+                _id: 0,
+                slug: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $addFields: {
+          file: { $arrayElemAt: ["$files", 0] },
+        },
+      },
+      //server
+      {
+        $lookup: {
+          from: "servers",
+          localField: "serverId",
+          foreignField: "_id",
+          as: "servers",
+          pipeline: [
+            {
+              $project: {
+                _id: 0,
+                svIp: 1,
+                svPort: 1,
+                svUser: 1,
+                svPass: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $addFields: {
+          storage: { $arrayElemAt: ["$servers", 0] },
+        },
+      },
+      {
+        $set: {
+          slug: "$file.slug",
+          downloadFrom: {
+            $concat: [
+              "/home/files/",
+              "$file.slug",
+              "/file_",
+              "$$ROOT.name",
+              ".mp4",
+            ],
+          },
+          saveTo: {
+            $concat: [
+              global.dir,
+              "/public/",
+              "$file.slug",
+              "/file_",
+              "$$ROOT.name",
+              ".mp4",
+            ],
+          },
+        },
+      },
+      {
+        $project: {
+          fileId: 1,
+          slug: 1,
+          downloadFrom: 1,
+          saveTo: 1,
+          storage: 1,
+        },
+      },
+    ]);
+
+    if (!rows?.length) return res.json({ error: true, msg: `ไม่พบข้อมูล` });
+    const row = rows[0];
+    let outPutPath = `${global.dirPublic}${row?.slug}`;
+    if (!fs.existsSync(outPutPath)) {
+      fs.mkdirSync(outPutPath, { recursive: true });
+    }
+    let data = {
+      ...row,
+    };
+
+    const resp = await Scp.Download(row);
+    if (resp?.error) {
+      //สร้างคิวเพื่อเช็ค
+      return res.json(resp);
+    }
+    return res.json(data);
+  } catch (err) {
+    console.log(err);
+    return res.json({ error: true, msg: "DownloadVideo" });
+  }
+};
+
+exports.ConvertStart = async (req, res) => {
+  try {
+    const { slug } = req.query;
+
+    shell.exec(
+      `sudo bash ${global.dir}/shell/convert.sh ${slug}`,
+      { async: false, silent: false },
+      function (data) {}
+    );
+
+    return res.json({ msg: `convert ${slug}` });
+  } catch (err) {
+    console.log(err);
+    return res.json({ error: true, msg: "PreStart" });
+  }
+};

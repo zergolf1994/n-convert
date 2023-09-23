@@ -24,17 +24,23 @@ sudo bash ${root_dir}/shell/updatePercent.sh ${slug} > /dev/null &
 
 if [[ $source != "null" ]]; then
 
+    #post_url="http://${localhost}/download/"
+    #json_data="{\"slug\": \"${slug}\", \"outPutPath\": \"${outPutPath}\",}"
+    #curl -X POST -H "Content-Type: application/json" -d "$json_data" "$post_url"
+    #curl -sS "http://${localhost}/remote/${slug}/${resolution}"
+
     outPut=${outPutPath}/file_default.mp4
     downloadtmpSave="${outPutPath}/file_default.txt"
     
     curl "${source}" -o ${outPut} --progress-bar > ${downloadtmpSave} 2>&1
 
     echo "${slug} | Downloaded"
+
+#sleep 5
+#sudo bash ${root_dir}/shell/convert.sh ${slug} 
+
+sleep 5
+curl -sS "http://${localhost}/convert-start?slug=${slug}"
+
 fi
-
-#sleep 5
-sudo bash ${root_dir}/shell/convert.sh ${slug} 
-#sleep 5
-curl -sS "http://${localhost}/done/${slug}"
-
 exit 1
