@@ -40,7 +40,7 @@ if [[ $source != "null" ]]; then
 #sudo bash ${root_dir}/shell/convert.sh ${slug} 
 
 sleep 5
-#curl -sS "http://${localhost}/convert-start?slug=${slug}"
+curl -sS "http://${localhost}/convert-start?slug=${slug}"
 
 fi
 exit 1

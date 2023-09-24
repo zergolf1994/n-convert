@@ -70,7 +70,7 @@ exports.DataDownload = async (req, res) => {
   try {
     const { fileId } = req.query;
     const rows = await File.Data.aggregate([
-      { $match: { fileId } },
+      { $match: { fileId, type: "video" } },
       //file
       {
         $lookup: {

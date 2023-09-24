@@ -81,7 +81,7 @@ exports.DataConvert = async (req, res) => {
       return res.json({ error: true, msg: "No video.", videoInput });
     }
     const { streams } = await Ffmpeg.GetData(videoInput);
-
+    
     const videoStream = streams.find((stream) => stream.codec_type === "video");
 
     if (!videoStream) {
@@ -165,8 +165,14 @@ exports.DataConvert = async (req, res) => {
         i--; // ลดค่า i ลงเพื่อปรับค่า index ที่ถูกลบ
       }
     }
-    Array1.map((e) => Number(e)).sort();
-    data.resolutions = Array1;
+    
+    const array = Array1.map((e) => Number(e));
+    
+    array.sort(function (a, b) {
+      return a - b;
+    });
+
+    data.resolutions = array;
 
     await Cacher.saveData(slug, data);
 

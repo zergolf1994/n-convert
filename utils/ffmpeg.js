@@ -99,7 +99,7 @@ exports.ConvertQuality = async ({ slug, quality, useType }) => {
     if (!videoStream) {
       return res.json({ error: true, msg: "ไม่พบสตรีมวิดีโอในไฟล์" });
     }
-    /*
+
     let { width, height, codec_name } = videoStream;
 
     let resolWidth = {
@@ -109,14 +109,24 @@ exports.ConvertQuality = async ({ slug, quality, useType }) => {
       360: 640,
       240: 426,
     };
-    */
+
     let setSize = ``;
     if (useType == "height") {
-      setSize = `?x${quality}`;
+      if (width > height) {
+        setSize = `?x${quality}`;
+      } else {
+        setSize = `${quality}x?`;
+      }
     } else {
       setSize = `${quality}x?`;
+      if (width > height) {
+        setSize = `${resolWidth[quality]}x?`;
+      } else {
+        setSize = `?x${resolWidth[quality]}`;
+      }
     }
-    console.log(setSize);
+
+    return { error: true, setSize, data: { slug, quality, useType } };
     return new Promise((resolve, reject) => {
       let setup = ffmpeg(videoInput);
       setup.output(path.join(folderPath, `file_${quality}.mp4`));
