@@ -20,6 +20,8 @@ fi
 #เรียกดูความละเอียดทั้งหมด
 resolutions=$(echo $data | jq -r ".resolutions[]")
 useType=$(echo $data | jq -r ".useType")
+root_dir=$(echo $data | jq -r ".root_dir")
+
 
 sudo bash ${root_dir}/shell/updatePercent.sh ${slug} > /dev/null &
 #วนลูป เพื่อ ประมวลผลไฟล์ + อัพโหลดขึ้น Storage
