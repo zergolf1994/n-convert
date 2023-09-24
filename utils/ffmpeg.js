@@ -125,8 +125,6 @@ exports.ConvertQuality = async ({ slug, quality, useType }) => {
         setSize = `?x${resolWidth[quality]}`;
       }
     }
-
-    return { error: true, setSize, data: { slug, quality, useType } };
     return new Promise((resolve, reject) => {
       let setup = ffmpeg(videoInput);
       setup.output(path.join(folderPath, `file_${quality}.mp4`));
