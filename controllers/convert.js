@@ -165,7 +165,7 @@ exports.DataConvert = async (req, res) => {
         i--; // ลดค่า i ลงเพื่อปรับค่า index ที่ถูกลบ
       }
     }
-    Array1.sort();
+    Array1.map((e) => Number(e)).sort();
     data.resolutions = Array1;
 
     await Cacher.saveData(slug, data);
