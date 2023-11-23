@@ -2,6 +2,7 @@
 const ffmpeg = require("fluent-ffmpeg");
 const path = require("path");
 const fs = require("fs-extra");
+const { File } = require("../models");
 
 exports.GetData = async (video) => {
   try {
@@ -166,6 +167,14 @@ exports.ConvertQuality = async ({ slug, quality, useType }) => {
           JSON.stringify({ percent: 100 }),
           "utf8"
         );
+        //ล็อคประมวลผล
+        const row = await File.List.findOne({ slug });
+        await File.Lock.create({
+          msg: "videoConvertError",
+          userId: row?.userId,
+          fileId: row?._id,
+        });
+        await useCurl.get(`http://127.0.0.1/server/reload`);
         console.log(`error video-convert`, err);
         resolve({ error: true, err });
       });
